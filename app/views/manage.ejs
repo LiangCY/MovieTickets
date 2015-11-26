@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>影院管理</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.1.4/semantic.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <style>
+        #main {
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="ui grid" id="main">
+    <table class="ui celled table">
+        <thead>
+        <tr>
+            <th>影院</th>
+            <th>地址</th>
+            <th>淘宝ID</th>
+            <th>糯米ID</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <% cinemas.forEach(function (cinema) { %>
+        <tr>
+            <td class="collapsing">
+                <%= cinema.name %>
+            </td>
+            <td class="collapsing">
+                <%= cinema.address %>
+            </td>
+            <td class="collapsing">
+                <div class="ui transparent input">
+                    <input class="taobao" type="text" value="<%= cinema.taobaoId %>">
+                </div>
+            </td>
+            <td>
+                <div class="ui transparent fluid input">
+                    <input class="nuomi" type="text" value="<%= cinema.nuomiId %>">
+                </div>
+            </td>
+            <td class="collapsing">
+                <button class="ui blue tiny button" data-cid="<%= cinema._id %>">保存</button>
+                <button class="ui red tiny button" data-cid="<%= cinema._id %>">删除</button>
+            </td>
+        </tr>
+        <% }) %>
+        </tbody>
+    </table>
+</div>
+<script>
+    $('.blue.button').on('click', function () {
+        var $button = $(this);
+        $button.addClass('loading');
+        var cinemaId = $button.data('cid');
+        var $taobao = $button.parent().parent().find('.taobao');
+        var $nuomi = $button.parent().parent().find('.nuomi');
+        var taobaoId = $taobao.val();
+        var nuomiId = $nuomi.val();
+        $.ajax('/cinemas/edit', {
+            data: {
+                cinemaId: cinemaId,
+                taobaoId: taobaoId,
+                nuomiId: nuomiId
+            },
+            success: function (data) {
+                $button.removeClass('loading');
+                $taobao.val(data.taobaoId);
+            },
+            error: function () {
+                $button.removeClass('loading');
+                $nuomi.val(data.nuomiId);
+            }
+        });
+    });
+    $('.red.button').on('click', function () {
+        var $tr = $(this).parent().parent();
+        var cinemaId = $(this).data('cid');
+        $.ajax('/cinemas/delete', {
+            data: {
+                cinemaId: cinemaId
+            },
+            success: function (data) {
+                if (data.success === 1) {
+                    $tr.remove();
+                }
+            },
+            error: function () {
+            }
+        });
+    });
+</script>
+</body>
+</html>

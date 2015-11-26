@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title><%= movie %></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.1.4/semantic.min.css">
+    <style>
+        .container {
+            padding-top: 40px;
+        }
+    </style>
+</head>
+<body>
+<div class="ui container">
+    <h1 class="ui header"><%= movie %></h1>
+    <table class="ui celled table">
+        <thead>
+        <tr>
+            <th>影院</th>
+            <th>地址</th>
+            <th>场次</th>
+            <th>最低票价</th>
+        </tr>
+        </thead>
+        <tbody>
+        <% cinemas.forEach(function (cinema) { %>
+        <tr>
+            <td>
+                <a href="<%= '/tickets?movie=' + movie + '&cinema=' + cinema.name %>">
+                    <%= cinema.name %>
+                </a>
+            </td>
+            <td>
+                <%= cinema.address %>
+            </td>
+            <td>
+                <%= cinema.ticketCount %>
+            </td>
+            <td>
+                <%= cinema.minPrice %>
+            </td>
+        </tr>
+        <% }) %>
+        </tbody>
+    </table>
+    <div class="ui divider"></div>
+</div>
+</body>
+</html>

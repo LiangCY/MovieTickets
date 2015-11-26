@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>正在上映</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.1.4/semantic.min.css">
+    <style>
+        #main {
+            padding-top: 40px;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="ui two column grid" id="main">
+    <div class="column">
+        <h1 class="ui dividing header">正在上映</h1>
+        <div class="ui five column grid">
+            <% isPlaying.forEach(function (movie) { %>
+            <div class="column">
+                <div class="ui fluid card">
+                    <div class="image">
+                        <img src="<%= movie.poster %>">
+                    </div>
+                    <div class="content">
+                        <a class="header" href="<%= '/cinemas?name=' + movie.name %>">
+                            <%= movie.name %>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <% }) %>
+        </div>
+    </div>
+    <div class="ui vertical divider"></div>
+    <div class="column">
+        <h1 class="ui dividing header">即将上映</h1>
+        <div class="ui five column grid">
+            <% willPlay.forEach(function (movie) { %>
+            <div class="column">
+                <div class="ui fluid card">
+                    <div class="image">
+                        <img src="<%= movie.poster %>">
+                    </div>
+                    <div class="content">
+                        <a class="header" href="<%= '/cinemas?name=' + movie.name %>">
+                            <%= movie.name %>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <% }) %>
+        </div>
+    </div>
+</div>
+</body>
+</html>

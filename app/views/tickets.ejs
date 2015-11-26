@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>场次</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.1.4/semantic.min.css">
+    <style>
+        .container {
+            padding-top: 40px;
+            padding-bottom: 40px;
+        }
+    </style>
+</head>
+<body>
+<div class="ui container">
+    <h1 class="ui dividing header"><%= movie + '-' + cinema %></h1>
+    <table class="ui celled table">
+        <thead>
+        <tr>
+            <th>时间</th>
+            <th>类型</th>
+            <th>淘宝</th>
+            <th>糯米</th>
+        </tr>
+        </thead>
+        <tbody>
+        <% tickets.forEach(function (ticket) { %>
+        <tr>
+            <td>
+                <%= moment(ticket.time).format('MM-DD HH:mm') %>
+            </td>
+            <td>
+                <%= ticket.type %>
+            </td>
+            <td>
+                <%= ticket.taobaoPrice %>
+            </td>
+            <td>
+                <%= ticket.nuomiPrice %>
+            </td>
+        </tr>
+        <% }) %>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
