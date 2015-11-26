@@ -7,8 +7,8 @@
 
 - 电影列表
 
-![电影列表](https://github.com/LiangCY/MovieTickets/raw/master/screenshots/movies.jpg)
+![电影列表](https://raw.githubusercontent.com/LiangCY/MovieTickets/master/screenshots/movies.jpg)
 
 - 影院管理
 
-![影院管理](https://github.com/LiangCY/MovieTickets/raw/master/screenshots/cinemas.jpg)
+![影院管理](https://raw.githubusercontent.com/LiangCY/MovieTickets/master/screenshots/cinemas.jpg)
