@@ -8,7 +8,8 @@ var TicketSchema = new Schema({
     time: Date,
     type:String,
     taobaoPrice: String,
-    nuomiPrice:String
+    nuomiPrice:String,
+    meituanPrice:String
 });
 
 module.exports = mongoose.model('Ticket', TicketSchema);

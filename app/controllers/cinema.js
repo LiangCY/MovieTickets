@@ -16,14 +16,14 @@ exports.list = function (req, res) {
                     cinema.ticketCount = tickets.length;
                     var prices = [];
                     tickets.forEach(function (ticket) {
-                        if(ticket.taobaoPrice){
+                        if (ticket.taobaoPrice) {
                             prices.push(parseFloat(ticket.taobaoPrice));
                         }
-                        if(ticket.nuomiPrice){
+                        if (ticket.nuomiPrice) {
                             prices.push(parseFloat(ticket.nuomiPrice));
                         }
                     });
-                    if (tickets.length == 0) {
+                    if (prices.length == 0) {
                         cinema.minPrice = '';
                         callback(err, cinema);
                     } else {
@@ -49,14 +49,26 @@ exports.manage = function (req, res) {
     });
 };
 
+exports.add = function (req, res) {
+    var cinema = new Cinema(req.query);
+    cinema.save(function (err) {
+        if (err) {
+            console.log(err);
+        }
+        res.redirect('/cinemas/manage');
+    });
+};
+
 exports.edit = function (req, res) {
     var cinemaId = req.query.cinemaId;
     var taobaoId = req.query.taobaoId;
     var nuomiId = req.query.nuomiId;
+    var meituanId = req.query.meituanId;
     Cinema.findByIdAndUpdate(cinemaId, {
         $set: {
             taobaoId: taobaoId,
-            nuomiId: nuomiId
+            nuomiId: nuomiId,
+            meituanId: meituanId
         }
     }, {new: true}, function (err, cinema) {
         res.send(cinema);

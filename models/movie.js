@@ -8,7 +8,8 @@ var MovieSchema = new Schema({
     status: Number,
     updateTime: Date,
     taobaoId: String,
-    nuomiId: String
+    nuomiId: String,
+    meituanId:String
 });
 
 module.exports = mongoose.model('Movie', MovieSchema);

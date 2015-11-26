@@ -17,90 +17,133 @@ exports.updateTickets = function () {
             Cinema.find().exec(callback);
         }
     ], function (err, results) {
-        async.parallel(
-            [
-                function (callback) {
-                    async.eachSeries(results[0], function (movie, callback) {
-                        async.eachSeries(results[1], function (cinema, callback) {
-                            if (movie.taobaoId) {
-                                getTicketsFromTaobao(movie.taobaoId, cinema.taobaoId, function (err, tickets) {
-                                    async.each(tickets, function (ticket, callback) {
-                                        Ticket.findOneAndUpdate({
+        async.parallel([
+            function (callback) {
+                async.eachSeries(results[0], function (movie, callback) {
+                    async.eachSeries(results[1], function (cinema, callback) {
+                        if (movie.taobaoId && cinema.taobaoId) {
+                            getTicketsFromTaobao(movie.taobaoId, cinema.taobaoId, function (err, tickets) {
+                                async.each(tickets, function (ticket, callback) {
+                                    Ticket.findOneAndUpdate({
+                                        movie: movie._id,
+                                        cinema: cinema._id,
+                                        time: moment(ticket.date + " " + ticket.time, "YYYY-MM-DD HH:mm")
+                                    }, {
+                                        $set: {
                                             movie: movie._id,
                                             cinema: cinema._id,
-                                            time: moment(ticket.date + " " + ticket.time, "YYYY-MM-DD HH:mm")
-                                        }, {
-                                            $set: {
-                                                movie: movie._id,
-                                                cinema: cinema._id,
-                                                time: moment(ticket.date + " " + ticket.time, "YYYY-MM-DD HH:mm"),
-                                                type: ticket.type,
-                                                taobaoPrice: ticket.price
-                                            }
-                                        }, {new: true, upsert: true}, function (err, ticket) {
-                                            console.log(moment().format('MM-DD HH:mm') + movie.name + ' Taobao:' + ticket.taobaoPrice);
-                                            callback(err);
-                                        });
-                                    }, function (err) {
-                                        setTimeout(function () {
-                                            callback(err);
-                                        }, 1000);
+                                            time: moment(ticket.date + " " + ticket.time, "YYYY-MM-DD HH:mm"),
+                                            type: ticket.type,
+                                            taobaoPrice: ticket.price
+                                        }
+                                    }, {new: true, upsert: true}, function (err, ticket) {
+                                        console.log(moment().format('MM-DD HH:mm') + movie.name + ' Taobao:' + ticket.taobaoPrice);
+                                        callback(err);
                                     });
+                                }, function (err) {
+                                    setTimeout(function () {
+                                        callback(err);
+                                    }, 1000);
                                 });
-                            } else {
-                                callback(null);
-                            }
-                        }, function (err) {
-                            movie.updateTime = moment();
-                            movie.save();
-                            callback(err);
-                        });
+                            });
+                        } else {
+                            callback(null);
+                        }
                     }, function (err) {
+                        movie.updateTime = moment();
+                        movie.save();
                         callback(err);
                     });
-                },
-                function (callback) {
-                    async.eachSeries(results[0], function (movie, callback) {
-                        async.eachSeries(results[1], function (cinema, callback) {
-                            if (movie.nuomiId) {
-                                getTicketsFromNuomi(movie.nuomiId, cinema.nuomiId, function (err, tickets) {
-                                    async.each(tickets, function (ticket, callback) {
-                                        Ticket.findOneAndUpdate({
+                }, function (err) {
+                    callback(err);
+                });
+            },
+            function (callback) {
+                async.eachSeries(results[0], function (movie, callback) {
+                    async.eachSeries(results[1], function (cinema, callback) {
+                        if (movie.nuomiId && cinema.nuomiId) {
+                            getTicketsFromNuomi(movie.nuomiId, cinema.nuomiId, function (err, tickets) {
+                                async.each(tickets, function (ticket, callback) {
+                                    Ticket.findOneAndUpdate({
+                                        movie: movie._id,
+                                        cinema: cinema._id,
+                                        time: ticket.time
+                                    }, {
+                                        $set: {
                                             movie: movie._id,
                                             cinema: cinema._id,
-                                            time: ticket.time
-                                        }, {
-                                            $set: {
-                                                movie: movie._id,
-                                                cinema: cinema._id,
-                                                time: ticket.time,
-                                                type: ticket.type,
-                                                nuomiPrice: ticket.price
-                                            }
-                                        }, {new: true, upsert: true}, function (err, ticket) {
-                                            console.log(moment().format('MM-DD HH:mm') + movie.name + ' Nuomi:' + ticket.nuomiPrice);
-                                            callback(err);
-                                        });
-                                    }, function (err) {
-                                        setTimeout(function () {
-                                            callback(err);
-                                        }, 1000);
+                                            time: ticket.time,
+                                            type: ticket.type,
+                                            nuomiPrice: ticket.price
+                                        }
+                                    }, {new: true, upsert: true}, function (err, ticket) {
+                                        console.log(moment().format('MM-DD HH:mm') + movie.name + ' Nuomi:' + ticket.nuomiPrice);
+                                        callback(err);
                                     });
+                                }, function (err) {
+                                    setTimeout(function () {
+                                        callback(err);
+                                    }, 1000);
                                 });
-                            } else {
-                                callback(null);
-                            }
-                        }, function (err) {
-                            movie.updateTime = moment();
-                            movie.save();
-                            callback(err);
-                        });
+                            });
+                        } else {
+                            callback(null);
+                        }
                     }, function (err) {
+                        movie.updateTime = moment();
+                        movie.save();
                         callback(err);
                     });
-                }
-            ], function (err) {
-            });
+                }, function (err) {
+                    callback(err);
+                });
+            },
+            function (callback) {
+                async.eachSeries(results[1], function (cinema, callback) {
+                    if (cinema.meituanId) {
+                        getTicketsFromMeituan(cinema.meituanId, function (err, tickets) {
+                            async.each(tickets, function (ticket, callback) {
+                                Movie.findOne({meituanId: ticket.movieMeituanId})
+                                    .exec(function (err, movie) {
+                                        if (movie) {
+                                            Ticket.findOneAndUpdate({
+                                                movie: movie._id,
+                                                cinema: cinema._id,
+                                                time: ticket.time
+                                            }, {
+                                                $set: {
+                                                    movie: movie._id,
+                                                    cinema: cinema._id,
+                                                    time: ticket.time,
+                                                    type: ticket.type,
+                                                    meituanPrice: ticket.price
+                                                }
+                                            }, {new: true, upsert: true}, function (err, ticket) {
+                                                console.log(moment().format('MM-DD HH:mm') + movie.name + ' Meituan');
+                                                callback(err);
+                                            });
+                                        } else {
+                                            callback(err);
+                                        }
+                                    });
+                            }, function (err) {
+                                setTimeout(function () {
+                                    callback(err);
+                                }, 1000);
+                            });
+                        });
+                    } else {
+                        callback(null);
+                    }
+                }, function (err) {
+                    callback(err);
+                });
+            }
+        ], function (err) {
+            if (err) {
+                console.log(err);
+            }
+        });
     });
 };
 
@@ -144,7 +187,6 @@ var getTicketsFromTaobao = function (movieTaobaoId, cinemaTaobaoId, callback) {
 };
 
 var getTicketsFromNuomi = function (movieNuomiId, cinemaNuomiId, callback) {
-
     request({url: 'http://nj.nuomi.com/pcindex/main/timetable?cinemaid=' + cinemaNuomiId + '&mid=' + movieNuomiId},
         function (err, response, body) {
             if (body) {
@@ -173,9 +215,52 @@ var getTicketsFromNuomi = function (movieNuomiId, cinemaNuomiId, callback) {
                                     price: price
                                 });
                             }
-
                         });
                     });
+                callback(err, tickets);
+            } else {
+                callback(err, []);
+            }
+        });
+};
+
+var getTicketsFromMeituan = function (cinemaMeituanId, callback) {
+    request({url: 'http://nj.meituan.com/shop/' + cinemaMeituanId},
+        function (err, response, body) {
+            if (body) {
+                var $ = cheerio.load(body);
+                var tickets = [];
+                $('.movie-info').each(function () {
+                    var movieMeituanId = $(this).find('header a.movie-info__name').attr("href").split('/')[2];
+                    var name = $(this).find('header a.movie-info__name').attr("title");
+                    var $dateList = $(this).find('.show-time .show-time-tag');
+                    $(this).find('table.time-table').each(function (i) {
+                        var date = $($dateList[i]).attr('data-date');
+                        $(this).find('tr').each(function (i) {
+                            if (i > 0) {
+                                var time = $(this).find('.start-time').text();
+                                if (time) {
+                                    var type = $($(this).find('td')[1]).text();
+                                    console.log(name);
+                                    console.log(date + ' ' + time);
+                                    console.log(type);
+                                    var $mobilePrice = $(this).find('.promotion-active');
+                                    if ($mobilePrice.length == 0) {
+                                        var price = $(this).find('.price-wrapper strong.price').html();
+                                    } else {
+                                        price = $($mobilePrice.find('.trigger__price')).html();
+                                    }
+                                    tickets.push({
+                                        movieMeituanId: movieMeituanId,
+                                        time: moment(date + ' ' + time, 'YYYY-MM-DD HH:mm'),
+                                        type: type,
+                                        price: price
+                                    });
+                                }
+                            }
+                        });
+                    });
+                });
                 callback(err, tickets);
             } else {
                 callback(err, []);

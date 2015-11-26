@@ -6,7 +6,8 @@ var CinemaSchema = new Schema({
     name: String,
     address: String,
     taobaoId: String,
-    nuomiId: String
+    nuomiId: String,
+    meituanId: String
 });
 
 module.exports = mongoose.model('Cinema', CinemaSchema);

@@ -7,50 +7,74 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
     <style>
         #main {
-            margin-top: 40px;
+            margin-top: 20px;
             margin-bottom: 20px;
+            padding: 0 10px;
         }
     </style>
 </head>
 <body>
 <div class="ui grid" id="main">
-    <table class="ui celled table">
-        <thead>
-        <tr>
-            <th>影院</th>
-            <th>地址</th>
-            <th>淘宝ID</th>
-            <th>糯米ID</th>
-            <th>操作</th>
-        </tr>
-        </thead>
-        <tbody>
-        <% cinemas.forEach(function (cinema) { %>
-        <tr>
-            <td class="collapsing">
-                <%= cinema.name %>
-            </td>
-            <td class="collapsing">
-                <%= cinema.address %>
-            </td>
-            <td class="collapsing">
-                <div class="ui transparent input">
-                    <input class="taobao" type="text" value="<%= cinema.taobaoId %>">
+    <div class="sixteen wide column">
+        <form class="ui form" action="/cinemas/add">
+            <div class="inline fields">
+                <label>添加影院</label>
+
+                <div class="three wide field">
+                    <input type="text" name="name" placeholder="名称">
                 </div>
-            </td>
-            <td>
-                <div class="ui transparent fluid input">
-                    <input class="nuomi" type="text" value="<%= cinema.nuomiId %>">
+                <div class="four wide field">
+                    <input type="text" name="address" placeholder="地址">
                 </div>
-            </td>
-            <td class="collapsing">
-                <button class="ui blue tiny button" data-cid="<%= cinema._id %>">保存</button>
-                <button class="ui red tiny button" data-cid="<%= cinema._id %>">删除</button>
-            </td>
-        </tr>
-        <% }) %>
-        </tbody>
-    </table>
+                <div class="two wide field">
+                    <input type="submit" class="ui green button" value="添加">
+                </div>
+            </div>
+        </form>
+        <table class="ui celled striped table">
+            <thead>
+            <tr>
+                <th>影院</th>
+                <th>地址</th>
+                <th>淘宝ID</th>
+                <th>糯米ID</th>
+                <th>美团ID</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <% cinemas.forEach(function (cinema) { %>
+            <tr>
+                <td class="collapsing">
+                    <%= cinema.name %>
+                </td>
+                <td class="collapsing">
+                    <%= cinema.address %>
+                </td>
+                <td class="collapsing">
+                    <div class="ui transparent input">
+                        <input class="taobao" type="text" value="<%= cinema.taobaoId %>">
+                    </div>
+                </td>
+                <td>
+                    <div class="ui transparent fluid input">
+                        <input class="nuomi" type="text" value="<%= cinema.nuomiId %>">
+                    </div>
+                </td>
+                <td>
+                    <div class="ui transparent fluid input">
+                        <input class="meituan" type="text" value="<%= cinema.meituanId %>">
+                    </div>
+                </td>
+                <td class="collapsing">
+                    <button class="ui blue tiny button" data-cid="<%= cinema._id %>">保存</button>
+                    <button class="ui red tiny button" data-cid="<%= cinema._id %>">删除</button>
+                </td>
+            </tr>
+            <% }) %>
+            </tbody>
+        </table>
+    </div>
 </div>
 <script>
     $('.blue.button').on('click', function () {
@@ -59,21 +83,25 @@
         var cinemaId = $button.data('cid');
         var $taobao = $button.parent().parent().find('.taobao');
         var $nuomi = $button.parent().parent().find('.nuomi');
+        var $meituan = $button.parent().parent().find('.meituan');
         var taobaoId = $taobao.val();
         var nuomiId = $nuomi.val();
+        var meituanId = $meituan.val();
         $.ajax('/cinemas/edit', {
             data: {
                 cinemaId: cinemaId,
                 taobaoId: taobaoId,
-                nuomiId: nuomiId
+                nuomiId: nuomiId,
+                meituanId: meituanId
             },
             success: function (data) {
                 $button.removeClass('loading');
                 $taobao.val(data.taobaoId);
+                $nuomi.val(data.nuomiId);
+                $meituan.val(data.meituanId);
             },
             error: function () {
                 $button.removeClass('loading');
-                $nuomi.val(data.nuomiId);
             }
         });
     });
@@ -88,8 +116,6 @@
                 if (data.success === 1) {
                     $tr.remove();
                 }
-            },
-            error: function () {
             }
         });
     });

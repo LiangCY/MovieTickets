@@ -10,6 +10,7 @@ module.exports = function (app) {
     app.get('/tickets', Ticket.getTickets);
 
     app.get('/cinemas/manage', Cinema.manage);
+    app.get('/cinemas/add', Cinema.add);
     app.get('/cinemas/edit', Cinema.edit);
     app.get('/cinemas/delete', Cinema.delete);
 };
