@@ -7,8 +7,8 @@
 
 - 电影列表
 
-![电影列表](http://i12.tietuku.com/99b9ef1b52c44dc4.png)
+![电影列表](https://github.com/LiangCY/MovieTickets/tree/master/screenshots/电影列表.png)
 
 - 影院管理
 
-![影院管理](http://i5.tietuku.com/65d3fc724ab11043.png)
+![影院管理](https://github.com/LiangCY/MovieTickets/tree/master/screenshots/影院管理.png)
