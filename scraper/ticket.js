@@ -148,7 +148,6 @@ exports.updateTickets = function () {
 };
 
 var getTicketsFromTaobao = function (movieTaobaoId, cinemaTaobaoId, callback) {
-
     request({
             url: 'https://dianying.taobao.com/showDetailSchedule.htm?showId=' + movieTaobaoId + '&cinemaId=' + cinemaTaobaoId
         },
