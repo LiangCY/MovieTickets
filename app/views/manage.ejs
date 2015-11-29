@@ -39,6 +39,7 @@
                 <th>淘宝ID</th>
                 <th>糯米ID</th>
                 <th>美团ID</th>
+                <th>微票ID</th>
                 <th>操作</th>
             </tr>
             </thead>
@@ -66,6 +67,11 @@
                         <input class="meituan" type="text" value="<%= cinema.meituanId %>">
                     </div>
                 </td>
+                <td>
+                    <div class="ui transparent fluid input">
+                        <input class="weipiao" type="text" value="<%= cinema.weipiaoId %>">
+                    </div>
+                </td>
                 <td class="collapsing">
                     <button class="ui blue tiny button" data-cid="<%= cinema._id %>">保存</button>
                     <button class="ui red tiny button" data-cid="<%= cinema._id %>">删除</button>
@@ -84,21 +90,25 @@
         var $taobao = $button.parent().parent().find('.taobao');
         var $nuomi = $button.parent().parent().find('.nuomi');
         var $meituan = $button.parent().parent().find('.meituan');
+        var $weipiao = $button.parent().parent().find('.weipiao');
         var taobaoId = $taobao.val();
         var nuomiId = $nuomi.val();
         var meituanId = $meituan.val();
+        var weipiaoId = $weipiao.val();
         $.ajax('/cinemas/edit', {
             data: {
                 cinemaId: cinemaId,
                 taobaoId: taobaoId,
                 nuomiId: nuomiId,
-                meituanId: meituanId
+                meituanId: meituanId,
+                weipiaoId:weipiaoId
             },
             success: function (data) {
                 $button.removeClass('loading');
                 $taobao.val(data.taobaoId);
                 $nuomi.val(data.nuomiId);
                 $meituan.val(data.meituanId);
+                $weipiao.val(data.weipiaoId);
             },
             error: function () {
                 $button.removeClass('loading');

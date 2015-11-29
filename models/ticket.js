@@ -6,10 +6,11 @@ var TicketSchema = new Schema({
     movie: {type: ObjectId, ref: 'Movie'},
     cinema: {type: ObjectId, ref: 'Cinema'},
     time: Date,
-    type:String,
+    type: String,
     taobaoPrice: String,
-    nuomiPrice:String,
-    meituanPrice:String
+    nuomiPrice: String,
+    meituanPrice: String,
+    weipiaoPrice: String
 });
 
 module.exports = mongoose.model('Ticket', TicketSchema);

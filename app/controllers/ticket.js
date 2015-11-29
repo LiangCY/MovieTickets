@@ -5,10 +5,8 @@ var Cinema = require('../../models/cinema');
 var Ticket = require('../../models/ticket');
 
 exports.getTickets = function (req, res) {
-
     var movieName = req.query.movie;
     var cinemaName = req.query.cinema;
-
     async.parallel([
         function (callback) {
             Movie.findOne({name: movieName})

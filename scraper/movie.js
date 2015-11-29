@@ -1,3 +1,5 @@
+var request = require('request');
+var cheerio = require('cheerio');
 var scraperjs = require('scraperjs');
 var _ = require('underscore');
 var async = require('async');
@@ -6,7 +8,7 @@ var Movie = require('../models/movie');
 exports.updateMovies = function () {
     async.series([
         function (callback) {
-            getMoviesFromMeituan(function (result) {
+            getMoviesFromTaobao(function (result) {
                 async.parallel([
                     function (callback) {
                         var movies = _.union(result.isPlaying, result.willPlay).map(function (movie) {
@@ -33,7 +35,7 @@ exports.updateMovies = function () {
                                     poster: movie.poster,
                                     updateTime: new Date(),
                                     status: 1,
-                                    meituanId: movie.meituanId
+                                    taobaoId: movie.taobaoId
                                 }
                             }, {
                                 new: true,
@@ -55,7 +57,7 @@ exports.updateMovies = function () {
                                     poster: movie.poster,
                                     updateTime: new Date(),
                                     status: 2,
-                                    meituanId: movie.meituanId
+                                    taobaoId: movie.taobaoId
                                 }
                             }, {
                                 new: true,
@@ -81,7 +83,6 @@ exports.updateMovies = function () {
                                 name: movie.name
                             }, {
                                 $set: {
-                                    poster: movie.poster,
                                     nuomiId: movie.nuomiId
                                 }
                             }, function (err) {
@@ -97,7 +98,6 @@ exports.updateMovies = function () {
                                 name: movie.name
                             }, {
                                 $set: {
-                                    poster: movie.poster,
                                     nuomiId: movie.nuomiId
                                 }
                             }, function (err) {
@@ -113,7 +113,7 @@ exports.updateMovies = function () {
             });
         },
         function (callback) {
-            getMoviesFromTaobao(function (result) {
+            getMoviesFromMeituan(function (result) {
                 async.parallel([
                     function (callback) {
                         async.each(result.isPlaying, function (movie, callback) {
@@ -121,8 +121,7 @@ exports.updateMovies = function () {
                                 name: movie.name
                             }, {
                                 $set: {
-                                    poster: movie.poster,
-                                    taobaoId: movie.taobaoId
+                                    meituanId: movie.meituanId
                                 }
                             }, function (err) {
                                 callback(err);
@@ -137,8 +136,45 @@ exports.updateMovies = function () {
                                 name: movie.name
                             }, {
                                 $set: {
-                                    poster: movie.poster,
-                                    taobaoId: movie.taobaoId
+                                    meituanId: movie.meituanId
+                                }
+                            }, function (err) {
+                                callback(err);
+                            });
+                        }, function (err) {
+                            callback(err);
+                        });
+                    }
+                ], function (err) {
+                    callback(err);
+                });
+            });
+        },
+        function (callback) {
+            getMoviesFromWeipiao(function (result) {
+                async.parallel([
+                    function (callback) {
+                        async.each(result.isPlaying, function (movie, callback) {
+                            Movie.findOneAndUpdate({
+                                name: movie.name
+                            }, {
+                                $set: {
+                                    weipiaoId: movie.weipiaoId
+                                }
+                            }, function (err) {
+                                callback(err);
+                            });
+                        }, function (err) {
+                            callback(err);
+                        })
+                    },
+                    function (callback) {
+                        async.each(result.willPlay, function (movie, callback) {
+                            Movie.findOneAndUpdate({
+                                name: movie.name
+                            }, {
+                                $set: {
+                                    weipiaoId: movie.weipiaoId
                                 }
                             }, function (err) {
                                 callback(err);
@@ -154,8 +190,9 @@ exports.updateMovies = function () {
         }
     ], function (err) {
         if (err) {
-            console.log(err);
+            return console.log(err);
         }
+        console.log('Finish update movies');
     });
 };
 
@@ -215,6 +252,7 @@ var getMoviesFromNuomi = function (callback) {
                 .map(function () {
                     return {
                         name: $(this).attr('title'),
+                        poster: $(this).find('img').attr('src'),
                         nuomiId: $(this).attr('href').substring(6)
                     };
                 }).get();
@@ -240,8 +278,7 @@ var getMoviesFromMeituan = function (callback) {
                             var $cover = $(this).find('.movie-cell__cover');
                             return {
                                 name: $cover.attr("title"),
-                                meituanId: /dianying\/(\d+)$/.exec($cover.attr("href"))[1],
-                                poster: $cover.find('img').attr('src')
+                                meituanId: /dianying\/(\d+)$/.exec($cover.attr("href"))[1]
                             };
                         }).get();
                 })
@@ -275,6 +312,91 @@ var getMoviesFromMeituan = function (callback) {
         callback({
             isPlaying: results[0],
             willPlay: results[1]
+        });
+    });
+};
+
+var getMoviesFromWeipiao = function (callback) {
+    var isPlaying = [];
+    var willPlay = [];
+    async.parallel([
+        function (callback) {
+            var hasMore = true;
+            var page = 0;
+            async.whilst(
+                function () {
+                    return hasMore;
+                },
+                function (callback) {
+                    request({
+                            url: 'http://www.wepiao.com/film_ajax.html',
+                            method: 'POST',
+                            form: {
+                                page: page,
+                                filmtype: 1
+                            }
+                        },
+                        function (err, response, body) {
+                            var movies = JSON.parse(body);
+                            movies.forEach(function (movie) {
+                                isPlaying.push({
+                                    name: movie.name,
+                                    weipiaoId: movie.id,
+                                    poster: movie.poster_url
+                                });
+                            });
+                            page++;
+                            hasMore = movies.length == 8;
+                            callback(err);
+                        });
+                },
+                function (err) {
+                    callback(err);
+                }
+            );
+        },
+        function (callback) {
+            var hasMore = true;
+            var page = 0;
+            async.whilst(
+                function () {
+                    return hasMore && willPlay.length < 20;
+                },
+                function (callback) {
+                    request({
+                            url: 'http://www.wepiao.com/film_ajax.html',
+                            method: 'POST',
+                            form: {
+                                page: page,
+                                filmtype: 2
+                            }
+                        },
+                        function (err, response, body) {
+                            var movies = JSON.parse(body);
+                            movies.forEach(function (movie) {
+                                willPlay.push({
+                                    name: movie.name,
+                                    weipiaoId: movie.id,
+                                    poster: movie.poster_url
+                                });
+                            });
+                            page++;
+                            hasMore = movies.length == 8;
+                            callback(err);
+                        });
+                },
+                function (err) {
+                    callback(err);
+                }
+            );
+        }
+    ], function (err) {
+        if (err) {
+            return console.log(err);
+        }
+        callback({
+            isPlaying: isPlaying,
+            willPlay: willPlay
         });
     });
 };
