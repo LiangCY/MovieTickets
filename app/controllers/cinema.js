@@ -25,6 +25,9 @@ exports.list = function (req, res) {
                         if (ticket.weipiaoPrice) {
                             prices.push(parseFloat(ticket.weipiaoPrice));
                         }
+                        if (ticket.dianpingPrice) {
+                            prices.push(parseFloat(ticket.dianpingPrice));
+                        }
                     });
                     if (prices.length == 0) {
                         cinema.minPrice = '';
@@ -68,12 +71,14 @@ exports.edit = function (req, res) {
     var nuomiId = req.query.nuomiId;
     var meituanId = req.query.meituanId;
     var weipiaoId = req.query.weipiaoId;
+    var dianpingId = req.query.dianpingId;
     Cinema.findByIdAndUpdate(cinemaId, {
         $set: {
             taobaoId: taobaoId,
             nuomiId: nuomiId,
             meituanId: meituanId,
-            weipiaoId: weipiaoId
+            weipiaoId: weipiaoId,
+            dianpingId: dianpingId
         }
     }, {new: true}, function (err, cinema) {
         res.send(cinema);

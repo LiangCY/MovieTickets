@@ -172,6 +172,46 @@ exports.updateTickets = function () {
                 }, function (err) {
                     callback(err);
                 });
+            },
+            function (callback) {
+                async.eachSeries(results[0], function (movie, callback) {
+                    async.eachSeries(results[1], function (cinema, callback) {
+                        if (movie.dianpingId && cinema.dianpingId) {
+                            getTicketsFromDianping(movie.dianpingId, cinema.dianpingId, function (err, tickets) {
+                                async.each(tickets, function (ticket, callback) {
+                                    Ticket.findOneAndUpdate({
+                                        movie: movie._id,
+                                        cinema: cinema._id,
+                                        time: ticket.time
+                                    }, {
+                                        $set: {
+                                            movie: movie._id,
+                                            cinema: cinema._id,
+                                            time: ticket.time,
+                                            type: ticket.type,
+                                            dianpingPrice: ticket.price
+                                        }
+                                    }, {new: true, upsert: true}, function (err, ticket) {
+                                        console.log(moment().format('MM-DD HH:mm') + movie.name + ' ' + cinema.name + ' Dianping:' + ticket.dianpingPrice);
+                                        callback(err);
+                                    });
+                                }, function (err) {
+                                    setTimeout(function () {
+                                        callback(err);
+                                    }, 1000);
+                                });
+                            });
+                        } else {
+                            callback(null);
+                        }
+                    }, function (err) {
+                        movie.updateTime = moment();
+                        movie.save();
+                        callback(err);
+                    });
+                }, function (err) {
+                    callback(err);
+                });
             }
         ], function (err) {
             if (err) {
@@ -265,7 +305,6 @@ var getTicketsFromMeituan = function (cinemaMeituanId, callback) {
                 var tickets = [];
                 $('.movie-info').each(function () {
                     var movieMeituanId = $(this).find('header a.movie-info__name').attr("href").split('/')[2];
-                    var name = $(this).find('header a.movie-info__name').attr("title");
                     var $dateList = $(this).find('.show-time .show-time-tag');
                     $(this).find('table.time-table').each(function (i) {
                         var date = $($dateList[i]).attr('data-date');
@@ -274,9 +313,6 @@ var getTicketsFromMeituan = function (cinemaMeituanId, callback) {
                                 var time = $(this).find('.start-time').text();
                                 if (time) {
                                     var type = $($(this).find('td')[1]).text();
-                                    console.log(name);
-                                    console.log(date + ' ' + time);
-                                    console.log(type);
                                     var $mobilePrice = $(this).find('.promotion-active');
                                     if ($mobilePrice.length == 0) {
                                         var price = $(this).find('.price-wrapper strong.price').html();
@@ -320,7 +356,11 @@ var getTicketsFromWeipiao = function (movieWeipiaoId, callback) {
                             }
                         },
                         function (err, response, body) {
-                            var results = JSON.parse(body)[0];
+                            try {
+                                var results = JSON.parse(body)[0];
+                            } catch (e) {
+                                return callback(e);
+                            }
                             if (!results || !results.cinema) {
                                 return callback(err);
                             }
@@ -367,4 +407,56 @@ var getTicketsFromWeipiao = function (movieWeipiaoId, callback) {
                 callback(err, []);
             }
         });
+};
+
+var getTicketsFromDianping = function (movieDianpingId, cinemaDianpingId, callback) {
+    request({
+        url: 'http://t.dianping.com/movie/ajax/movieDetail?movieId=' + movieDianpingId + '&cinemaId=' + cinemaDianpingId,
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36'
+        }
+    }, function (err, response, body) {
+        if (body) {
+            var tickets = [];
+            var $ = cheerio.load(body);
+            var dates = $('.date-box dd.J_item').map(function () {
+                return $(this).attr('data-id');
+            }).get();
+            async.eachSeries(dates, function (date, callback) {
+                request({
+                    url: 'http://t.dianping.com/movie/ajax/movieDetail?movieId=' + movieDianpingId + '&cinemaId=' + cinemaDianpingId + '&date=' + date,
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36'
+                    }
+                }, function (err, response, body) {
+                    if (body) {
+                        var $ = cheerio.load(body);
+                        $('.sessions-body .tbody tr').each(function () {
+                            var time = $(this).find('.s-ses').text();
+                            var type = $(this).find('.s-ver').text().replace('/', '');
+                            var price = $(this).find('.s-price').text().replace('¥', '');
+                            tickets.push({
+                                time: moment(date + time, 'YYYY-MM-DDHH:mm'),
+                                type: type,
+                                price: price
+                            });
+                        });
+                    }
+                    callback(err);
+                });
+            }, function (err) {
+                callback(err, tickets);
+            });
+        } else {
+            callback(err, []);
+        }
+    })
+};
+
+exports.removeTickets = function (callback) {
+    Ticket.remove({
+        time: {$lt: moment()}
+    }, function (err) {
+        callback(err);
+    })
 };

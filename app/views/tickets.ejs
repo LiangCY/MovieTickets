@@ -37,6 +37,7 @@
             <th>糯米</th>
             <th>美团</th>
             <th>微票</th>
+            <th>点评</th>
         </tr>
         </thead>
         <tbody>
@@ -58,7 +59,10 @@
                 <%- ticket.meituanPrice %>
             </td>
             <td>
-                <%- ticket.weipiaoPrice %>
+                <%= ticket.weipiaoPrice %>
+            </td>
+            <td>
+                <%= ticket.dianpingPrice %>
             </td>
         </tr>
         <% }) %>

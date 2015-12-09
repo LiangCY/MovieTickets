@@ -187,6 +187,44 @@ exports.updateMovies = function () {
                     callback(err);
                 });
             });
+        },
+        function (callback) {
+            getMovieFromDianping(function (result) {
+                async.parallel([
+                    function (callback) {
+                        async.each(result.isPlaying, function (movie, callback) {
+                            Movie.findOneAndUpdate({
+                                name: movie.name
+                            }, {
+                                $set: {
+                                    dianpingId: movie.dianpingId
+                                }
+                            }, function (err) {
+                                callback(err);
+                            });
+                        }, function (err) {
+                            callback(err);
+                        })
+                    },
+                    function (callback) {
+                        async.each(result.willPlay, function (movie, callback) {
+                            Movie.findOneAndUpdate({
+                                name: movie.name
+                            }, {
+                                $set: {
+                                    dianpingId: movie.dianpingId
+                                }
+                            }, function (err) {
+                                callback(err);
+                            });
+                        }, function (err) {
+                            callback(err);
+                        });
+                    }
+                ], function (err) {
+                    callback(err);
+                });
+            });
         }
     ], function (err) {
         if (err) {
@@ -392,7 +430,86 @@ var getMoviesFromWeipiao = function (callback) {
         }
     ], function (err) {
         if (err) {
-            return console.log(err);
+            return callback(err);
+        }
+        callback({
+            isPlaying: isPlaying,
+            willPlay: willPlay
+        });
+    });
+};
+
+var getMovieFromDianping = function (callback) {
+    var isPlaying = [];
+    var willPlay = [];
+    async.parallel([
+        function (callback) {
+            request({
+                url: 'http://t.dianping.com/movie/nanjing/playing',
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36'
+                }
+            }, function (err, response, body) {
+                if (body) {
+                    var $ = cheerio.load(body);
+                    $('.content .list .list-item').each(function () {
+                        var $title = $(this).find('dd.title .text');
+                        isPlaying.push({
+                            name: $title.text(),
+                            dianpingId: $title.attr('href').replace('/movie/', '')
+                        })
+                    });
+                    var pageLinks = $('.page-wrap .Pages').find('a.PageLink').map(function () {
+                        return $(this).attr('href');
+                    }).get();
+                    async.eachSeries(pageLinks, function (link, callback) {
+                        request({
+                            url: 'http://t.dianping.com/movie/nanjing/playing' + link,
+                            headers: {
+                                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36'
+                            }
+                        }, function (err, response, body) {
+                            if (body) {
+                                var $ = cheerio.load(body);
+                                $('.content .list .list-item').each(function () {
+                                    var $title = $(this).find('dd.title .text');
+                                    isPlaying.push({
+                                        name: $title.text(),
+                                        dianpingId: $title.attr('href').replace('/movie/', '')
+                                    });
+                                });
+                            }
+                            callback(err);
+                        });
+                    }, function (err) {
+                        callback(err);
+                    });
+                }
+            });
+        },
+        function (callback) {
+            request({
+                url: 'http://t.dianping.com/movie/nanjing/comingsoon',
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36'
+                }
+            }, function (err, response, body) {
+                if (body) {
+                    var $ = cheerio.load(body);
+                    $('.content .list .list-item').each(function () {
+                        var $title = $(this).find('dd.title .text');
+                        willPlay.push({
+                            name: $title.text(),
+                            dianpingId: $title.attr('href').replace('/movie/', '')
+                        });
+                    });
+                }
+                callback(err);
+            });
+        }
+    ], function (err) {
+        if (err) {
+            return callback(err);
         }
         callback({
             isPlaying: isPlaying,

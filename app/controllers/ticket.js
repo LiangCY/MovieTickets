@@ -30,5 +30,4 @@ exports.getTickets = function (req, res) {
                 })
             });
     });
-
 };

@@ -9,7 +9,8 @@ var MovieSchema = new Schema({
     taobaoId: String,
     nuomiId: String,
     meituanId:String,
-    weipiaoId:String
+    weipiaoId:String,
+    dianpingId:String
 });
 
 module.exports = mongoose.model('Movie', MovieSchema);
