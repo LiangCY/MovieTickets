@@ -306,61 +306,65 @@ var getTicketsFromMeituan = function (movieMeituanId, cinemaMeituanId, callback)
         function (err, response, body) {
             if (body) {
                 var tickets = [];
-                var result = JSON.parse(body).data;
-                var cssLink = result.cssLink;
-                request(cssLink, function (err, response, body) {
-                    var css = body;
-                    for (var date in result.DateShow) {
-                        if (result.DateShow.hasOwnProperty(date)) {
-                            result.DateShow[date].forEach(function (item) {
-                                var date = item.showDate;
-                                var time = item.tm;
-                                var priceHtml = item.sellPrStr;
-                                $ = cheerio.load(priceHtml);
-                                var priceStr = '';
-                                $('span').each(function (index) {
-                                    if (index == 1) {
-                                        priceStr += '.';
-                                    }
-                                    var className = /(true\d+)/.exec($(this).attr('class'))[0];
-                                    $(this).find('i').each(function (index) {
-                                        var num = $(this).text();
-                                        var reg = new RegExp(className + ">i:nth-of-type\\(" + (index + 1) + "\\)\\{text-indent:(\\S+)em;width:(\\S+)em;}");
-                                        var offset = reg.exec(css)[1];
-                                        var width = reg.exec(css)[2];
-                                        if (width == '0.55') {
-                                            if (/-0.0/.test(offset)) {
-                                                priceStr += num[0]
-                                            } else if (/-0.55/.test(offset)) {
-                                                priceStr += num[1]
-                                            } else if (/-1.1/.test(offset)) {
-                                                priceStr += num[2]
-                                            } else if (/-1.65/.test(offset)) {
-                                                priceStr += num[3]
-                                            }
-                                        } else if (width == '1.1') {
-                                            if (/-0.0/.test(offset)) {
-                                                priceStr += num.substr(0, 2);
-                                            } else if (/-0.55/.test(offset)) {
-                                                priceStr += num.substr(1, 2);
-                                            } else if (/-1.1/.test(offset)) {
-                                                priceStr += num.substr(2, 2);
-                                            } else if (/-1.65/.test(offset)) {
-                                                priceStr += num.substr(3, 2);
-                                            }
+                try {
+                    var result = JSON.parse(body).data;
+                    var cssLink = result.cssLink;
+                    request(cssLink, function (err, response, body) {
+                        var css = body;
+                        for (var date in result.DateShow) {
+                            if (result.DateShow.hasOwnProperty(date)) {
+                                result.DateShow[date].forEach(function (item) {
+                                    var date = item.showDate;
+                                    var time = item.tm;
+                                    var priceHtml = item.sellPrStr;
+                                    $ = cheerio.load(priceHtml);
+                                    var priceStr = '';
+                                    $('span').each(function (index) {
+                                        if (index == 1) {
+                                            priceStr += '.';
                                         }
+                                        var className = /(true\d+)/.exec($(this).attr('class'))[0];
+                                        $(this).find('i').each(function (index) {
+                                            var num = $(this).text();
+                                            var reg = new RegExp(className + ">i:nth-of-type\\(" + (index + 1) + "\\)\\{text-indent:(\\S+)em;width:(\\S+)em;}");
+                                            var offset = reg.exec(css)[1];
+                                            var width = reg.exec(css)[2];
+                                            if (width == '0.55') {
+                                                if (/-0.0/.test(offset)) {
+                                                    priceStr += num[0]
+                                                } else if (/-0.55/.test(offset)) {
+                                                    priceStr += num[1]
+                                                } else if (/-1.1/.test(offset)) {
+                                                    priceStr += num[2]
+                                                } else if (/-1.65/.test(offset)) {
+                                                    priceStr += num[3]
+                                                }
+                                            } else if (width == '1.1') {
+                                                if (/-0.0/.test(offset)) {
+                                                    priceStr += num.substr(0, 2);
+                                                } else if (/-0.55/.test(offset)) {
+                                                    priceStr += num.substr(1, 2);
+                                                } else if (/-1.1/.test(offset)) {
+                                                    priceStr += num.substr(2, 2);
+                                                } else if (/-1.65/.test(offset)) {
+                                                    priceStr += num.substr(3, 2);
+                                                }
+                                            }
+                                        });
+                                    });
+                                    tickets.push({
+                                        time: moment(date + time, 'YYYY-MM-DDHH:mm'),
+                                        type: item.lang + item.tp,
+                                        price: parseFloat(priceStr)
                                     });
                                 });
-                                tickets.push({
-                                    time: moment(date + time, 'YYYY-MM-DDHH:mm'),
-                                    type: item.lang + item.tp,
-                                    price: parseFloat(priceStr)
-                                });
-                            });
+                            }
                         }
-                    }
-                    callback(err, tickets);
-                });
+                        callback(err, tickets);
+                    });
+                } catch (e) {
+                    callback(err, []);
+                }
             } else {
                 callback(err, []);
             }
