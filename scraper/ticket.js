@@ -318,7 +318,10 @@ var getTicketsFromMeituan = function (movieMeituanId, cinemaMeituanId, callback)
                                 var priceHtml = item.sellPrStr;
                                 $ = cheerio.load(priceHtml);
                                 var priceStr = '';
-                                $('span').each(function () {
+                                $('span').each(function (index) {
+                                    if (index == 1) {
+                                        priceStr += '.';
+                                    }
                                     var className = /(true\d+)/.exec($(this).attr('class'))[0];
                                     $(this).find('i').each(function (index) {
                                         var num = $(this).text();

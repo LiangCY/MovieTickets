@@ -35,7 +35,7 @@
                 <%= ticket.type %>
             </td>
             <td>
-                <%= ticket.taobaoPrice %>
+                <%= parseFloat(ticket.taobaoPrice) || '' %>
             </td>
             <td>
                 <%= ticket.nuomiPrice %>

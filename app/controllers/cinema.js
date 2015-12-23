@@ -22,6 +22,9 @@ exports.list = function (req, res) {
                         if (ticket.nuomiPrice) {
                             prices.push(parseFloat(ticket.nuomiPrice));
                         }
+                        if (ticket.meituanPrice) {
+                            prices.push(parseFloat(ticket.meituanPrice));
+                        }
                         if (ticket.dianpingPrice) {
                             prices.push(parseFloat(ticket.dianpingPrice));
                         }
