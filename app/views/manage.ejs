@@ -39,7 +39,6 @@
                 <th>淘宝ID</th>
                 <th class="three wide">糯米ID</th>
                 <th>美团ID</th>
-                <th>微票ID</th>
                 <th>点评ID</th>
                 <th>操作</th>
             </tr>
@@ -70,11 +69,6 @@
                 </td>
                 <td>
                     <div class="ui transparent fluid input">
-                        <input class="weipiao" type="text" value="<%= cinema.weipiaoId %>">
-                    </div>
-                </td>
-                <td>
-                    <div class="ui transparent fluid input">
                         <input class="dianping" type="text" value="<%= cinema.dianpingId %>">
                     </div>
                 </td>
@@ -96,12 +90,10 @@
         var $taobao = $button.parent().parent().find('.taobao');
         var $nuomi = $button.parent().parent().find('.nuomi');
         var $meituan = $button.parent().parent().find('.meituan');
-        var $weipiao = $button.parent().parent().find('.weipiao');
         var $dianping = $button.parent().parent().find('.dianping');
         var taobaoId = $taobao.val();
         var nuomiId = $nuomi.val();
         var meituanId = $meituan.val();
-        var weipiaoId = $weipiao.val();
         var dianpingId = $dianping.val();
         $.ajax('/cinemas/edit', {
             data: {
@@ -109,7 +101,6 @@
                 taobaoId: taobaoId,
                 nuomiId: nuomiId,
                 meituanId: meituanId,
-                weipiaoId: weipiaoId,
                 dianpingId: dianpingId
             },
             success: function (data) {
@@ -117,7 +108,6 @@
                 $taobao.val(data.taobaoId);
                 $nuomi.val(data.nuomiId);
                 $meituan.val(data.meituanId);
-                $weipiao.val(data.weipiaoId);
                 $dianping.val(data.dianpingId);
             },
             error: function () {

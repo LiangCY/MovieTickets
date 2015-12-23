@@ -97,78 +97,39 @@ exports.updateTickets = function () {
                 });
             },
             function (callback) {
-                async.eachSeries(results[1], function (cinema, callback) {
-                    if (cinema.meituanId) {
-                        getTicketsFromMeituan(cinema.meituanId, function (err, tickets) {
-                            async.each(tickets, function (ticket, callback) {
-                                Movie.findOne({meituanId: ticket.movieMeituanId})
-                                    .exec(function (err, movie) {
-                                        if (movie) {
-                                            Ticket.findOneAndUpdate({
-                                                movie: movie._id,
-                                                cinema: cinema._id,
-                                                time: ticket.time
-                                            }, {
-                                                $set: {
-                                                    movie: movie._id,
-                                                    cinema: cinema._id,
-                                                    time: ticket.time,
-                                                    type: ticket.type,
-                                                    meituanPrice: ticket.price
-                                                }
-                                            }, {new: true, upsert: true}, function (err, ticket) {
-                                                console.log(moment().format('MM-DD HH:mm') + movie.name + ' Meituan');
-                                                callback(err);
-                                            });
-                                        } else {
-                                            callback(err);
-                                        }
-                                    });
-                            }, function (err) {
-                                setTimeout(function () {
-                                    callback(err);
-                                }, 1000);
-                            });
-                        });
-                    } else {
-                        callback(null);
-                    }
-                }, function (err) {
-                    callback(err);
-                });
-            },
-            function (callback) {
                 async.eachSeries(results[0], function (movie, callback) {
-                    if (movie.weipiaoId) {
-                        getTicketsFromWeipiao(movie.weipiaoId, function (err, tickets) {
-                            async.each(tickets, function (ticket, callback) {
-                                Ticket.findOneAndUpdate({
-                                    movie: movie._id,
-                                    cinema: ticket.cinemaId,
-                                    time: ticket.time
-                                }, {
-                                    $set: {
+                    async.eachSeries(results[1], function (cinema, callback) {
+                        if (movie.meituanId && cinema.meituanId) {
+                            getTicketsFromMeituan(movie.meituanId, cinema.meituanId, function (err, tickets) {
+                                async.each(tickets, function (ticket, callback) {
+                                    Ticket.findOneAndUpdate({
                                         movie: movie._id,
-                                        cinema: ticket.cinemaId,
-                                        time: ticket.time,
-                                        type: ticket.type,
-                                        weipiaoPrice: ticket.price
-                                    }
-                                }, {new: true, upsert: true}, function (err, ticket) {
-                                    console.log(moment().format('MM-DD HH:mm') + movie.name + ' Weipiao:' + ticket.weipiaoPrice);
+                                        cinema: cinema._id,
+                                        time: ticket.time
+                                    }, {
+                                        $set: {
+                                            movie: movie._id,
+                                            cinema: cinema._id,
+                                            time: ticket.time,
+                                            type: ticket.type,
+                                            meituanPrice: ticket.price
+                                        }
+                                    }, {new: true, upsert: true}, function (err, ticket) {
+                                        console.log(moment().format('MM-DD HH:mm') + movie.name + ' Meituan:' + ticket.meituanPrice);
+                                        callback(err);
+                                    });
+                                }, function (err) {
                                     callback(err);
                                 });
-                            }, function (err) {
-                                movie.updateTime = moment();
-                                movie.save();
-                                setTimeout(function () {
-                                    callback(err);
-                                }, 1000);
                             });
-                        });
-                    } else {
-                        callback(null);
-                    }
+                        } else {
+                            callback(null);
+                        }
+                    }, function (err) {
+                        movie.updateTime = moment();
+                        movie.save();
+                        callback(err);
+                    });
                 }, function (err) {
                     callback(err);
                 });
@@ -217,6 +178,7 @@ exports.updateTickets = function () {
             if (err) {
                 console.log(err);
             }
+            console.log('Finish update tickets');
         });
     });
 };
@@ -297,110 +259,103 @@ var getTicketsFromNuomi = function (movieNuomiId, cinemaNuomiId, callback) {
         });
 };
 
-var getTicketsFromMeituan = function (cinemaMeituanId, callback) {
-    request({url: 'http://nj.meituan.com/shop/' + cinemaMeituanId},
-        function (err, response, body) {
-            if (body) {
-                var $ = cheerio.load(body);
-                var tickets = [];
-                $('.movie-info').each(function () {
-                    var movieMeituanId = $(this).find('header a.movie-info__name').attr("href").split('/')[2];
-                    var $dateList = $(this).find('.show-time .show-time-tag');
-                    $(this).find('table.time-table').each(function (i) {
-                        var date = $($dateList[i]).attr('data-date');
-                        $(this).find('tr').each(function (i) {
-                            if (i > 0) {
-                                var time = $(this).find('.start-time').text();
-                                if (time) {
-                                    var type = $($(this).find('td')[1]).text();
-                                    var $mobilePrice = $(this).find('.promotion-active');
-                                    if ($mobilePrice.length == 0) {
-                                        var price = $(this).find('.price-wrapper strong.price').html();
-                                    } else {
-                                        price = $($mobilePrice.find('.trigger__price')).html();
-                                    }
-                                    tickets.push({
-                                        movieMeituanId: movieMeituanId,
-                                        time: moment(date + ' ' + time, 'YYYY-MM-DD HH:mm'),
-                                        type: type,
-                                        price: price
-                                    });
-                                }
-                            }
-                        });
-                    });
-                });
-                callback(err, tickets);
-            } else {
-                callback(err, []);
-            }
-        });
-};
+//var getTicketsFromMeituan = function (cinemaMeituanId, callback) {
+//    request({url: 'http://nj.meituan.com/shop/' + cinemaMeituanId},
+//        function (err, response, body) {
+//            if (body) {
+//                var $ = cheerio.load(body);
+//                var tickets = [];
+//                $('.movie-info').each(function () {
+//                    var movieMeituanId = $(this).find('header a.movie-info__name').attr("href").split('/')[2];
+//                    var $dateList = $(this).find('.show-time .show-time-tag');
+//                    $(this).find('table.time-table').each(function (i) {
+//                        var date = $($dateList[i]).attr('data-date');
+//                        $(this).find('tr').each(function (i) {
+//                            if (i > 0) {
+//                                var time = $(this).find('.start-time').text();
+//                                if (time) {
+//                                    var type = $($(this).find('td')[1]).text();
+//                                    var $mobilePrice = $(this).find('.promotion-active');
+//                                    if ($mobilePrice.length == 0) {
+//                                        var price = $(this).find('.price-wrapper strong.price').html();
+//                                    } else {
+//                                        price = $($mobilePrice.find('.trigger__price')).html();
+//                                    }
+//                                    tickets.push({
+//                                        movieMeituanId: movieMeituanId,
+//                                        time: moment(date + ' ' + time, 'YYYY-MM-DD HH:mm'),
+//                                        type: type,
+//                                        price: price
+//                                    });
+//                                }
+//                            }
+//                        });
+//                    });
+//                });
+//                callback(err, tickets);
+//            } else {
+//                callback(err, []);
+//            }
+//        });
+//};
 
-var getTicketsFromWeipiao = function (movieWeipiaoId, callback) {
-    request({url: 'http://www.wepiao.com/film_show_' + movieWeipiaoId + '.html'},
+var getTicketsFromMeituan = function (movieMeituanId, cinemaMeituanId, callback) {
+    request({
+            url: 'http://m.maoyan.com/showtime/wrap.json?cinemaid=' + cinemaMeituanId + '&movieid=' + movieMeituanId
+        },
         function (err, response, body) {
             if (body) {
-                var $ = cheerio.load(body);
                 var tickets = [];
-                var dates = $('.fs.fs_date .list').find('span').map(function () {
-                    return $(this).attr('id');
-                }).get();
-                async.eachSeries(dates, function (date, callback) {
-                    request({
-                            url: 'http://www.wepiao.com/film_area.html',
-                            method: 'POST',
-                            form: {
-                                fid: movieWeipiaoId,
-                                date: date
-                            }
-                        },
-                        function (err, response, body) {
-                            try {
-                                var results = JSON.parse(body)[0];
-                            } catch (e) {
-                                return callback(e);
-                            }
-                            if (!results || !results.cinema) {
-                                return callback(err);
-                            }
-                            var cinemas = results.cinema.map(function (item) {
-                                return item.id;
-                            });
-                            Cinema.find({
-                                weipiaoId: {$in: cinemas}
-                            }).exec(function (err, cinemas) {
-                                async.each(cinemas, function (cinema, callback) {
-                                    request({
-                                            url: 'http://www.wepiao.com/film_scheseat.html',
-                                            method: 'POST',
-                                            form: {
-                                                fid: movieWeipiaoId,
-                                                date: date,
-                                                cid: cinema.weipiaoId
+                var result = JSON.parse(body).data;
+                var cssLink = result.cssLink;
+                request(cssLink, function (err, response, body) {
+                    var css = body;
+                    for (var date in result.DateShow) {
+                        if (result.DateShow.hasOwnProperty(date)) {
+                            result.DateShow[date].forEach(function (item) {
+                                var date = item.showDate;
+                                var time = item.tm;
+                                var priceHtml = item.sellPrStr;
+                                $ = cheerio.load(priceHtml);
+                                var priceStr = '';
+                                $('span').each(function () {
+                                    var className = /(true\d+)/.exec($(this).attr('class'))[0];
+                                    $(this).find('i').each(function (index) {
+                                        var num = $(this).text();
+                                        var reg = new RegExp(className + ">i:nth-of-type\\(" + (index + 1) + "\\)\\{text-indent:(\\S+)em;width:(\\S+)em;}");
+                                        var offset = reg.exec(css)[1];
+                                        var width = reg.exec(css)[2];
+                                        if (width == '0.55') {
+                                            if (/-0.0/.test(offset)) {
+                                                priceStr += num[0]
+                                            } else if (/-0.55/.test(offset)) {
+                                                priceStr += num[1]
+                                            } else if (/-1.1/.test(offset)) {
+                                                priceStr += num[2]
+                                            } else if (/-1.65/.test(offset)) {
+                                                priceStr += num[3]
                                             }
-                                        },
-                                        function (err, response, body) {
-                                            var schedules = JSON.parse(body);
-                                            if (!schedules || schedules.length == 0) {
-                                                return callback(err);
+                                        } else if (width == '1.1') {
+                                            if (/-0.0/.test(offset)) {
+                                                priceStr += num.substr(0, 2);
+                                            } else if (/-0.55/.test(offset)) {
+                                                priceStr += num.substr(1, 2);
+                                            } else if (/-1.1/.test(offset)) {
+                                                priceStr += num.substr(2, 2);
+                                            } else if (/-1.65/.test(offset)) {
+                                                priceStr += num.substr(3, 2);
                                             }
-                                            schedules.forEach(function (schedule) {
-                                                tickets.push({
-                                                    cinemaId: cinema._id,
-                                                    time: moment(date + schedule.time, 'YYYYMMDDHH:mm'),
-                                                    type: schedule.lagu + schedule.type,
-                                                    price: schedule.price
-                                                });
-                                            });
-                                            callback(err);
-                                        });
-                                }, function (err) {
-                                    callback(err);
+                                        }
+                                    });
                                 });
-                            })
-                        });
-                }, function (err) {
+                                tickets.push({
+                                    time: moment(date + time, 'YYYY-MM-DDHH:mm'),
+                                    type: item.lang + item.tp,
+                                    price: parseFloat(priceStr)
+                                });
+                            });
+                        }
+                    }
                     callback(err, tickets);
                 });
             } else {
@@ -408,6 +363,7 @@ var getTicketsFromWeipiao = function (movieWeipiaoId, callback) {
             }
         });
 };
+
 
 var getTicketsFromDianping = function (movieDianpingId, cinemaDianpingId, callback) {
     request({
@@ -454,9 +410,7 @@ var getTicketsFromDianping = function (movieDianpingId, cinemaDianpingId, callba
 };
 
 exports.removeTickets = function (callback) {
-    Ticket.remove({
-        time: {$lt: moment()}
-    }, function (err) {
+    Ticket.remove({}, function (err) {
         callback(err);
-    })
+    });
 };

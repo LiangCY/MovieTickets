@@ -9,7 +9,6 @@ var MovieSchema = new Schema({
     taobaoId: String,
     nuomiId: String,
     meituanId:String,
-    weipiaoId:String,
     dianpingId:String
 });
 

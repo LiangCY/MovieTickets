@@ -10,7 +10,6 @@ var TicketSchema = new Schema({
     taobaoPrice: String,
     nuomiPrice: String,
     meituanPrice: String,
-    weipiaoPrice: String,
     dianpingPrice:String
 });
 
