@@ -12,7 +12,8 @@ exports.list = function (req, res) {
                 .exec(function (err, movies) {
                     async.each(movies, function (movie, callback) {
                         Ticket.count({
-                            movie: movie._id
+                            movie: movie._id,
+                            time: {$gt: Date.now()}
                         }).exec(function (err, count) {
                             movie.ticketCount = count;
                             callback(err);
@@ -39,7 +40,7 @@ exports.list = function (req, res) {
                     callback(err, movies.sort(function (a, b) {
                         return b.ticketCount - a.ticketCount
                     }));
-                })
+                });
             });
         }
     ], function (err, results) {
