@@ -326,7 +326,7 @@ var getTicketsFromMeituan = function (movieMeituanId, cinemaMeituanId, callback)
                                         var className = /(true\d+)/.exec($(this).attr('class'))[0];
                                         $(this).find('i').each(function (index) {
                                             var num = $(this).text();
-                                            var reg = new RegExp(className + ">i:nth-of-type\\(" + (index + 1) + "\\)\\{text-indent:(\\S+)em;width:(\\S+)em;}");
+                                            var reg = new RegExp(className + ">i:nth-of-type\\(" + (index + 1) + "\\)\\{text-indent:(\\S+)em;width:(\\S+)em;");
                                             var offset = reg.exec(css)[1];
                                             var width = reg.exec(css)[2];
                                             if (width == '0.55') {
